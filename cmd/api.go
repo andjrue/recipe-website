@@ -42,17 +42,17 @@ func (s *Server) Run() {
 }
 
 func (s *Server) handleRecipe(w http.ResponseWriter, r *http.Request) error {
-	if r.Method == "GET" {
-		return s.handleGetRecipe(w, r)
-	}
-	if r.Method == "POST" {
-		return s.handleCreateRecipe(w, r)
-	}
-	if r.Method == "DELETE" {
-		return s.handleDeleteRecipe(w, r)
-	}
 
-	return fmt.Errorf("Method not allowed: ", r.Method)
+	switch r.Method {
+	case "GET":
+		return s.handleGetRecipe(w, r)
+	case "POST":
+		return s.handleCreateRecipe(w, r)
+	case "DELETE":
+		return s.handleDeleteRecipe(w, r)
+	default:
+		return fmt.Errorf("Method not allowed: ", r.Method)
+	}
 }
 
 func (s *Server) handleGetRecipe(w http.ResponseWriter, r *http.Request) error {
