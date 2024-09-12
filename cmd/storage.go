@@ -1,28 +1,31 @@
 package main
 
 import (
-	"database/sql"
-	"log"
-
-	_ "github.com/lib/pq"
+	"math/rand"
 )
 
-type Storage struct {
-	db *sql.DB
+type Recipe struct {
+	ID           int    `json: "id"`
+	Title        string `json: "title"`
+	TimeToMake   string `json: "timeToMake"`
+	Description  string `json: "description"`
+	Ingredients  string `json: "ingredients"`
+	LinkToRecipe string `json: "linkToRecipe"`
 }
 
-func newDB() (*Storage, error) {
-	connStr := "user=postgres dbname=postgres password=recipe sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal(err)
+func newRecipe(id int, title, description, ingredients, timeToMake, linkToRecipe string) *Recipe {
+	return &Recipe{
+		ID:           id,
+		Title:        title,
+		TimeToMake:   timeToMake,
+		Description:  description,
+		Ingredients:  ingredients,
+		LinkToRecipe: linkToRecipe,
 	}
+}
 
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
+func randID() int {
+	recipeID := rand.Intn(10000)
 
-	return &Storage{
-		db: db,
-	}, nil
+	return recipeID
 }
