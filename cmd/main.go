@@ -4,7 +4,7 @@
                             TO-DO's
 ===============================================================
 
-1.) Get Posts connected to the DB for testing. Can do that pretty quickly.
+1.) Get Posts connected to the DB for testing. Can do that pretty quickly. **DONE**
 2.) Need to tackle update logic when that's done.
 	-> I probably need to add an {id} route. That would make the update logic much more sound.
 		 If we can use the ID in the route, then wouldn't need to even query the DB. We could go directly to
@@ -55,10 +55,10 @@ func main() {
 		log.Printf("Error loading env: %v", envErr)
 	}
 
-	// fmt.Println("env loaded")
+	//fmt.Println("env loaded")
 
 	db, err := sql.Open("pgx", os.Getenv("PG_DSN"))
-	// fmt.Println("sql.open")
+	//fmt.Println("sql.open")
 	if err != nil {
 		fmt.Printf("Unable to connect to Database: %v\n", err)
 		os.Exit(1)
@@ -74,7 +74,14 @@ func main() {
 
 	fmt.Println("Connected to DB")
 
-	server := newApiServer(":3000")
+	err = createRecipeTableFunc(db)
+	if err != nil {
+		fmt.Println("Issue creating table")
+	} else {
+		log.Printf("Receipe table create or already exists")
+	}
+
+	server := newApiServer(":3000", db)
 	server.Run()
 
 }

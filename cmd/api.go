@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,15 +11,19 @@ import (
 
 type Server struct {
 	listenAddr string
+	db         *sql.DB
 }
+
+// post was surprisingly easy, hyst needed to add db to the server. Working.
 
 type ApiError struct {
 	Error string
 }
 
-func newApiServer(listenAddr string) *Server {
+func newApiServer(listenAddr string, db *sql.DB) *Server {
 	return &Server{
 		listenAddr: listenAddr,
+		db:         db,
 	}
 }
 
@@ -72,7 +77,7 @@ func (s *Server) handleCreateRecipe(w http.ResponseWriter, r *http.Request) erro
 
 		Realitically, there won't be anywhere close to 10,000 recipes on the website. If that happens we have much larger problems than IDs, I'd owe Jeff so much cash.
 	*/
-
+	insertRecipeFunc(s.db, recipe)
 	return writeJson(w, http.StatusOK, recipe)
 }
 
