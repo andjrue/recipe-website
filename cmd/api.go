@@ -42,6 +42,13 @@ func (s *Server) Run() {
 			writeJson(w, http.StatusBadRequest, ApiError{Error: err.Error()})
 		}
 	})
+
+	router.HandleFunc("/recipes/{id}", func(w http.ResponseWriter, r *http.Request) {
+		err := s.handleRecipe(w, r)
+		if err != nil {
+			writeJson(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+		}
+	})
 	fmt.Println("Listening on Port: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
 }
@@ -61,8 +68,16 @@ func (s *Server) handleRecipe(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleGetRecipe(w http.ResponseWriter, r *http.Request) error {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
-	return nil
+	rec := new(Recipe) // Need to store the result here
+
+	if err := getRecipeFunc(s.db, rec, id); err != nil {
+		return fmt.Errorf("Error fetching recipe: %v\n", err)
+	}
+
+	return writeJson(w, http.StatusOK, rec)
 }
 
 func (s *Server) handleCreateRecipe(w http.ResponseWriter, r *http.Request) error {
