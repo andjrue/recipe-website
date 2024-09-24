@@ -55,13 +55,15 @@ CREATE TABLE IF NOT EXISTS recipes (
 );
 `
 
-func createRecipeTableFunc(db *sql.DB) error {
-	_, err := db.Exec(createRecipeTable)
+const deleteRecipe = `
+DELETE FROM recipes
+WHERE id = $1
+`
 
-	return err
-}
-
-// INSERT RECIPE
+const getRecipe = `
+SELECT * FROM recipes
+WHERE id = $1
+`
 
 const insertRecipe = `
 INSERT INTO
@@ -70,17 +72,16 @@ VALUES ($1, $2, $3, $4, $5)
 
 	`
 
+func createRecipeTableFunc(db *sql.DB) error {
+	_, err := db.Exec(createRecipeTable)
+
+	return err
+}
+
 func insertRecipeFunc(db *sql.DB, r *Recipe) error {
 	_, err := db.Exec(insertRecipe, r.Title, r.TimeToMake, r.Description, r.Ingredients, r.LinkToRecipe)
 	return err
 }
-
-// GET RECIPE
-
-const getRecipe = `
-SELECT * FROM recipes
-WHERE id = $1
-`
 
 func getRecipeFunc(db *sql.DB, r *Recipe, id string) error { // Will pass ID in handleGetRecipe
 	row := db.QueryRow(getRecipe, id)
@@ -88,13 +89,6 @@ func getRecipeFunc(db *sql.DB, r *Recipe, id string) error { // Will pass ID in 
 	// Cool, this is working now w/o the rand_id's. DB is queryable by the auto generated pg IDs
 	return row.Scan(&r.ID, &r.Title, &r.TimeToMake, &r.Description, &r.Ingredients, &r.LinkToRecipe)
 }
-
-// DELETE RECIPE
-
-const deleteRecipe = `
-DELETE FROM recipes
-WHERE id = $1
-`
 
 func deleteRecipeFunc(db *sql.DB, r *Recipe, id string) error {
 	_, err := db.Exec(deleteRecipe, id)

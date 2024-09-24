@@ -88,8 +88,6 @@ func (s *Server) handleCreateRecipe(w http.ResponseWriter, r *http.Request) erro
 	return writeJson(w, http.StatusOK, recipe)
 }
 
-// Not exactly sure how I'm going to do this
-// Will probably need to add IDs to each recipe, if ID exists and POST, update the recipe
 func (s *Server) handleUpdateRecipe(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
