@@ -14,7 +14,7 @@ type Server struct {
 	db         *sql.DB
 }
 
-// post was surprisingly easy, hyst needed to add db to the server. Working.
+// post was surprisingly easy, just needed to add db to the server. Working.
 
 type ApiError struct {
 	Error string
@@ -81,17 +81,9 @@ func (s *Server) handleGetRecipe(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleCreateRecipe(w http.ResponseWriter, r *http.Request) error {
-	id := randID()
-	recipe := newRecipe(id, "First Recipe", "", "Test", "Test", "Test")
+	// Eventually this will be user inputted information. Most likely through a form.
+	recipe := newRecipe("First Recipe", "", "Test", "Test", "Test")
 
-	/*
-		Todays solutions are tomorrows problems. I also realized I was doing this under getRecipe. Not ideal.
-
-		The idea is to use random IDs for each recipe, and we'll probably have to query the DB to see if that ID already exists. If it does, we can call randID()
-		again and the chances are very low that it will be another taken ID.
-
-		Realitically, there won't be anywhere close to 10,000 recipes on the website. If that happens we have much larger problems than IDs, I'd owe Jeff so much cash.
-	*/
 	insertRecipeFunc(s.db, recipe)
 	return writeJson(w, http.StatusOK, recipe)
 }
@@ -103,5 +95,10 @@ func (s *Server) handleUpdateRecipe(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (s *Server) handleDeleteRecipe(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	rec := new(Recipe)
+
+	return deleteRecipeFunc(s.db, rec, id)
 }

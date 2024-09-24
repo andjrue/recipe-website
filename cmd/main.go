@@ -58,6 +58,7 @@ func main() {
 	//fmt.Println("env loaded")
 
 	db, err := sql.Open("pgx", os.Getenv("PG_DSN"))
+
 	//fmt.Println("sql.open")
 	if err != nil {
 		fmt.Printf("Unable to connect to Database: %v\n", err)
@@ -78,7 +79,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Issue creating table")
 	} else {
-		log.Printf("Receipe table created or already exists")
+		log.Printf("Recipe table created or already exists")
 	}
 
 	server := newApiServer(":3000", db)
