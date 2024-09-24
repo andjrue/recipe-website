@@ -49,7 +49,7 @@ func (s *Server) Run() {
 			writeJson(w, http.StatusBadRequest, ApiError{Error: err.Error()})
 		}
 	})
-	fmt.Println("Listening on Port: ", s.listenAddr)
+	fmt.Println("Recipe API - Listening on Port: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
 }
 
