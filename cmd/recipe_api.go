@@ -49,6 +49,14 @@ func (s *Server) Run() {
 			writeJson(w, http.StatusBadRequest, ApiError{Error: err.Error()})
 		}
 	})
+
+	router.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		err := s.handleUser(w, r)
+		if err != nil {
+			writeJson(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+		}
+	})
+
 	fmt.Println("Recipe API - Listening on Port: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
 }
@@ -63,7 +71,7 @@ func (s *Server) handleRecipe(w http.ResponseWriter, r *http.Request) error {
 	case "DELETE":
 		return s.handleDeleteRecipe(w, r)
 	default:
-		return fmt.Errorf("Method not allowed: ", r.Method)
+		return fmt.Errorf("Recipes - Method not allowed: ", r.Method)
 	}
 }
 
@@ -96,7 +104,5 @@ func (s *Server) handleDeleteRecipe(w http.ResponseWriter, r *http.Request) erro
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	rec := new(Recipe)
-
-	return deleteRecipeFunc(s.db, rec, id)
+	return deleteRecipeFunc(s.db, id)
 }

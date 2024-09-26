@@ -11,7 +11,7 @@
 		 the correct recipe.
 
 		 Lots to consider for this. It definitely won't be as easy as I'm making it sound.
-3.) Handle deleting recipes. Should be easy, simple as an ID search (I think)
+3.) Handle deleting recipes. Should be easy, simple as an ID search (I think) **DONE**
 4.) There are more, but then this turns into a mountain. I'd rather keep it a hill.
 
 ===============================================================
@@ -29,6 +29,8 @@
  -> At present moment, I think the answer is no. There's a good chance we only have one user and can allow posts to be made from "anybody".
     In the event more people want to add in, I think it would be required to have account creation. Might need to look into JWT, etc.
     Would be nice to have it be linking a google account.
+    -> Going to go with this. I think username and password will suffice. There's no need to get too crazy.
+       Never going to send them an email or anything. Again, it will be very small.
 
 - What else is needed in AWS?
 	-> Definitely need to deploy this to an EC2 instance at some point. I can't have it running on my computer forever.
@@ -73,14 +75,21 @@ func main() {
 		log.Fatal(pingErr)
 	}
 
-	fmt.Println("Connected to DB")
+	fmt.Println("Connected to recipe DB\n")
 
 	err = createRecipeTableFunc(db)
 	if err != nil {
-		fmt.Println("Issue creating table")
+		fmt.Println("Issue creating recipe table\n")
 	} else {
-		log.Printf("Recipe table created or already exists")
+		log.Printf("Recipe table created or already exists\n")
 	}
+
+	err = createUserTableFunc(db)
+	if err != nil {
+		fmt.Println("Issue creating user table\n")
+	}
+
+	log.Printf("User table created or already exists\n")
 
 	server := newApiServer(":3000", db)
 	server.Run()

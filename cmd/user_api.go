@@ -1,40 +1,87 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type UserServer struct {
-	address string
-	userDB  *sql.DB
-}
+func (s *Server) handleUser(w http.ResponseWriter, r *http.Request) error {
 
-type userApiErr struct {
-	Error string
-}
-
-func newUserServer(address string, db *sql.DB) *UserServer {
-	return &UserServer{
-		address: address,
-		userDB:  db,
+	switch r.Method {
+	case "GET":
+		return s.handleGetUser(w, r)
+	case "POST":
+		return s.handleCreateUser(w, r)
+	case "DELETE":
+		return s.handleDeleteUser(w, r)
+	default:
+		return fmt.Errorf("Users - Method not allowed: ", r.Method)
 	}
 }
 
-func (us *UserServer) runUserServer() {
-	router := mux.NewRouter()
+func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
 
-	router.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
-		err := us.handleUser(w, r) // Will write this later, same as recipe_api
+func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error {
 
+	const queryUserDB = `
+	SELECT COUNT(*) FROM users
+	WHERE username = $1
+	`
+
+	// This will eventually be a form
+
+	db := s.db
+	envErr := godotenv.Load()
+	if envErr != nil {
+		fmt.Println("Issue loading user env", envErr)
+	}
+	user := newUser("drew_test12", os.Getenv("TEST_PASS"))
+
+	usernameExistsCh := make(chan bool)
+	// passwordLengthCheck := make(chan bool)
+
+	go func() {
+		var count int // We can count rows here. If > 0, we know it exists
+		err := db.QueryRow(queryUserDB, user.Username).Scan(&count)
 		if err != nil {
-			writeJson(w, http.StatusBadRequest, userApiErr{Error: err.Error()})
+			log.Println("Email check is hella broke: ", err)
 		}
-	})
+		usernameExistsCh <- count > 0
+	}()
 
-	fmt.Println("User API - Listening on Port: ", us.address) // Do we need to put this on a different port?
-	http.ListenAndServe(us.address, router)
+	usernameExists := <-usernameExistsCh
+
+	close(usernameExistsCh)
+
+	if usernameExists {
+		fmt.Println("Username already exists successfully captured: %v", user.Username)
+		http.Error(w, "Username already exists", http.StatusConflict)
+		return nil
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Error hashing password: %v\n", err)
+		return err
+	}
+
+	_, err = db.Exec(insertUser, user.Username, hashedPassword)
+	fmt.Printf("User created: %v\n", user)
+
+	return writeJson(w, http.StatusOK, user)
+}
+
+func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }

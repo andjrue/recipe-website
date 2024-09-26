@@ -90,11 +90,11 @@ func getRecipeFunc(db *sql.DB, r *Recipe, id string) error { // Will pass ID in 
 	return row.Scan(&r.ID, &r.Title, &r.TimeToMake, &r.Description, &r.Ingredients, &r.LinkToRecipe)
 }
 
-func deleteRecipeFunc(db *sql.DB, r *Recipe, id string) error {
+func deleteRecipeFunc(db *sql.DB, id string) error {
 	_, err := db.Exec(deleteRecipe, id)
 	if err != nil {
 		return fmt.Errorf("Issue deleting recipe: %v", err)
 	}
-	fmt.Print("Recipe %s deleted!", id)
+	fmt.Printf("Recipe %v deleted!", id)
 	return err
 }
