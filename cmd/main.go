@@ -12,7 +12,12 @@
 
 		 Lots to consider for this. It definitely won't be as easy as I'm making it sound.
 3.) Handle deleting recipes. Should be easy, simple as an ID search (I think) **DONE**
-4.) There are more, but then this turns into a mountain. I'd rather keep it a hill.
+4.) User creation and password hashing **DONE**
+5.) Start on the front end
+6.) Really figure out what we want to do here.
+	-> There are about a million ways I could go with this project. I'm not entirely sure what I want to do.
+	-> I also need to add usernames to the recipes and make sure each one aligns. I don't want someone else to be able to
+	   delete anybodys recipe.
 
 ===============================================================
                       THINGS TO CONSIDER
@@ -63,7 +68,7 @@ func main() {
 
 	//fmt.Println("sql.open")
 	if err != nil {
-		fmt.Printf("Unable to connect to Database: %v\n", err)
+		log.Printf("Unable to connect to Database: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -75,21 +80,21 @@ func main() {
 		log.Fatal(pingErr)
 	}
 
-	fmt.Println("Connected to recipe DB\n")
+	fmt.Println("Connected to recipe DB")
 
 	err = createRecipeTableFunc(db)
 	if err != nil {
-		fmt.Println("Issue creating recipe table\n")
+		fmt.Println("Issue creating recipe table")
 	} else {
-		log.Printf("Recipe table created or already exists\n")
+		log.Println("Recipe table created or already exists")
 	}
 
 	err = createUserTableFunc(db)
 	if err != nil {
-		fmt.Println("Issue creating user table\n")
+		log.Println("Issue creating user table")
 	}
 
-	log.Printf("User table created or already exists\n")
+	log.Println("User table created or already exists")
 
 	server := newApiServer(":3000", db)
 	server.Run()

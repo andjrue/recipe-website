@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 type Recipe struct {
@@ -61,8 +62,8 @@ WHERE id = $1
 `
 
 const getRecipe = `
-SELECT * FROM recipes
-WHERE id = $1
+SELECT *
+FROM recipes
 `
 
 const insertRecipe = `
@@ -83,11 +84,32 @@ func insertRecipeFunc(db *sql.DB, r *Recipe) error {
 	return err
 }
 
-func getRecipeFunc(db *sql.DB, r *Recipe, id string) error { // Will pass ID in handleGetRecipe
-	row := db.QueryRow(getRecipe, id)
+func getAllRecipesFunc(db *sql.DB) ([]Recipe, error) { // Will pass ID in handleGetRecipe
+	rows, err := db.Query(getRecipe)
 
+	if err != nil {
+		log.Printf("Issue querying recipes: %v", err)
+	}
+
+	defer rows.Close()
+
+	var res []Recipe
+
+	for rows.Next() {
+		var r Recipe
+		err := rows.Scan(&r.ID, &r.Title, &r.TimeToMake, &r.Description, &r.Ingredients, &r.LinkToRecipe)
+
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		}
+
+		log.Println()
+		res = append(res, r)
+	}
+	log.Printf("Res: %v", res)
 	// Cool, this is working now w/o the rand_id's. DB is queryable by the auto generated pg IDs
-	return row.Scan(&r.ID, &r.Title, &r.TimeToMake, &r.Description, &r.Ingredients, &r.LinkToRecipe)
+	return res, nil
 }
 
 func deleteRecipeFunc(db *sql.DB, id string) error {

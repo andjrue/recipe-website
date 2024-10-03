@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,7 +29,50 @@ func (s *Server) handleUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) error {
-	return nil
+
+	log.Printf("Request: %v", r)
+
+	db := s.db
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	log.Printf("entered ID: ", id)
+	intId, err := strconv.Atoi(id)
+
+	if err != nil {
+		return fmt.Errorf("Id still a strang: %v", intId)
+	}
+
+	log.Printf("ID successfully converted to int")
+
+	u := &User{} // Need to store the result here
+
+	if err := getUserFunc(db, u, id); err != nil {
+		return fmt.Errorf("Error fetching user: %v\n", err)
+	}
+
+	return writeJson(w, http.StatusOK, u)
+}
+
+const getUserQuery = `
+SELECT id, username FROM users
+WHERE id = $1
+
+`
+
+func getUserFunc(db *sql.DB, u *User, id string) error {
+	row := db.QueryRow(getUserQuery, id)
+	return row.Scan(&u.ID, &u.Username)
+}
+
+func getAllUsersFunc(db *sql.DB, u *User) error {
+	const getAllUsers = `
+	SELECT username
+	FROM users;
+	`
+
+	row := db.QueryRow(getAllUsers)
+	return row.Scan(&u.Username)
 }
 
 func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error {
@@ -98,6 +144,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error 
 		http.Error(w, "Username already exists", http.StatusConflict)
 		return nil
 	}
+
 	if succPass {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -108,18 +155,29 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error 
 		user.Password = string(hashedPassword) // Test, don't really want passwords being sent through API calls
 		log.Println("User created: \n", user)
 	}
+
 	if !usernameExists && succPass {
 		return writeJson(w, http.StatusOK, user)
-	} else {
-		return nil
 	}
+
+	return nil // We dont really need to return anything here. If we havent already returned an error than were good.
 
 }
 
 func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) error {
+	// If user name == user name, logic
 	return nil
 }
 
 func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
+
+	/*
+		A few ideas here:
+
+		1.) We will 100% want to make sure that the username of the user requesting the deletion matches up with the username of the
+		persone being deleted.
+		2.) I also think it would be good practice for them to enter their password before nuking their account
+
+	*/
 }

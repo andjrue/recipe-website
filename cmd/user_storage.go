@@ -3,6 +3,7 @@ package main
 import "database/sql"
 
 type User struct {
+	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Password string `json: "password"` // This will need to be hashed before they go into db https://medium.com/@cheickzida/golang-implementing-jwt-token-authentication-bba9bfd84d60
 }

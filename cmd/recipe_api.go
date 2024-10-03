@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type Server struct {
@@ -57,8 +59,25 @@ func (s *Server) Run() {
 		}
 	})
 
+	router.HandleFunc("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+		err := s.handleUser(w, r)
+		if err != nil {
+			log.Printf("AAAAAAAAAAAAA")
+			writeJson(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+		}
+	})
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(router)
+
 	fmt.Println("Recipe API - Listening on Port: ", s.listenAddr)
-	http.ListenAndServe(s.listenAddr, router)
+	http.ListenAndServe(s.listenAddr, handler)
 }
 
 func (s *Server) handleRecipe(w http.ResponseWriter, r *http.Request) error {
@@ -76,16 +95,19 @@ func (s *Server) handleRecipe(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Server) handleGetRecipe(w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	id := vars["id"]
+	// vars := mux.Vars(r)
+	// id := vars["id"]
+	// I might add ID back to this, but for now let's just worry about getting all of them.
 
-	rec := new(Recipe) // Need to store the result here
+	// rec := &Recipe{} // Need to store the result here
 
-	if err := getRecipeFunc(s.db, rec, id); err != nil {
-		return fmt.Errorf("Error fetching recipe: %v\n", err)
+	res, err := getAllRecipesFunc(s.db)
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return writeJson(w, http.StatusOK, rec)
+	return writeJson(w, http.StatusOK, res)
 }
 
 func (s *Server) handleCreateRecipe(w http.ResponseWriter, r *http.Request) error {
