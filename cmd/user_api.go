@@ -62,7 +62,7 @@ WHERE id = $1
 
 func getUserFunc(db *sql.DB, u *User, id string) error {
 	row := db.QueryRow(getUserQuery, id)
-	return row.Scan(&u.ID, &u.Username)
+	return row.Scan(&u.ID, &u.Email)
 }
 
 func getAllUsersFunc(db *sql.DB, u *User) error {
@@ -72,14 +72,14 @@ func getAllUsersFunc(db *sql.DB, u *User) error {
 	`
 
 	row := db.QueryRow(getAllUsers)
-	return row.Scan(&u.Username)
+	return row.Scan(&u.Email)
 }
 
 func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error {
 
 	const queryUserDB = `
 	SELECT COUNT(*) FROM users
-	WHERE username = $1
+	WHERE email = $1
 	`
 
 	// This will eventually be a form
@@ -89,9 +89,9 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error 
 	if envErr != nil {
 		log.Println("Issue loading user env", envErr)
 	}
-	user := newUser("drew_hash_and_pass_test_6", os.Getenv("TEST_PASS"))
+	user := newUser("drew_email_test", os.Getenv("TEST_PASS"))
 
-	usernameExistsCh := make(chan bool)
+	emailExistsCh := make(chan bool)
 	passwordLengthCheck := make(chan bool)
 
 	// Doing these checks concurrently is a little silly, but I've been reading concurrency in go and wanted to do it.
@@ -99,21 +99,21 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error 
 
 	go func() {
 		start := time.Now()
-		log.Println("Username check for: ", user.Username)
+		log.Println("Email check for: ", user.Email)
 		var count int // We can count rows here. If > 0, we know it exists
-		err := db.QueryRow(queryUserDB, user.Username).Scan(&count)
+		err := db.QueryRow(queryUserDB, user.Email).Scan(&count)
 		if err != nil {
 			log.Println("Email check is hella broke: ", err)
 		}
-		usernameExistsCh <- count > 0
-		log.Println("User check complete")
+		emailExistsCh <- count > 0
+		log.Println("Email check complete")
 		elapsed := time.Since(start)
-		log.Println("User check running for: ", elapsed)
+		log.Println("Email check running for: ", elapsed)
 	}()
 
 	go func() {
 		start := time.Now()
-		log.Println("Pass check for: ", user.Username)
+		log.Println("Pass check for: ", user.Email)
 		lenPass := len(user.Password)
 
 		if lenPass < 8 {
@@ -129,19 +129,19 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error 
 		// fmt.Println("Stuck here 1")
 		elapsed := time.Since(start)
 		log.Println("Successful pass check ran for: ", elapsed)
-		log.Println("Password accepted for User: ", user.Username)
+		log.Println("Password accepted for User: ", user.Email)
 		passwordLengthCheck <- true
 	}()
 
-	usernameExists := <-usernameExistsCh
+	emailExists := <-emailExistsCh
 	succPass := <-passwordLengthCheck
 
-	close(usernameExistsCh)
+	close(emailExistsCh)
 	close(passwordLengthCheck)
 
-	if usernameExists {
-		log.Println("Username already exists successfully captured: \n", user.Username)
-		http.Error(w, "Username already exists", http.StatusConflict)
+	if emailExists {
+		log.Println("Email already exists successfully captured: \n", user.Email)
+		http.Error(w, "Email already exists", http.StatusConflict)
 		return nil
 	}
 
@@ -151,12 +151,12 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) error 
 			log.Printf("Error hashing password: %v\n", err)
 			return err
 		}
-		_, err = db.Exec(insertUser, user.Username, hashedPassword)
+		_, err = db.Exec(insertUser, user.Email, hashedPassword)
 		user.Password = string(hashedPassword) // Test, don't really want passwords being sent through API calls
 		log.Println("User created: \n", user)
 	}
 
-	if !usernameExists && succPass {
+	if !emailExists && succPass {
 		return writeJson(w, http.StatusOK, user)
 	}
 
