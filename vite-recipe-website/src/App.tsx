@@ -34,17 +34,25 @@
 
 
 
-import DisplayRecipe from "./Components";
-import 'bootstrap/dist/css/bootstrap.min.css'; 
+// import DisplayRecipe from "./RecipeCards";
+import { useState } from 'react';
+import CreateAccountButton from "./AccountButton";
+import LoginForm from "./CreateAccount";
+
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function App() {
 
-  return (
-    <div>
-      <DisplayRecipe />
-    </div>
+    const [showCreateAccount, setShowCreateAccount] = useState(false);
 
-  );
+    return (
+        <div className="App">
+            <CreateAccountButton onClick = {() => setShowCreateAccount(true)} />
+            {showCreateAccount && <LoginForm />}
+        </div>
+    );
 }
 
 export default App;
