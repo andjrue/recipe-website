@@ -112,8 +112,7 @@ func (s *Server) handleGetRecipe(w http.ResponseWriter, r *http.Request) error {
 
 func (s *Server) handleCreateRecipe(w http.ResponseWriter, r *http.Request) error {
 	// Eventually this will be user inputted information. Most likely through a form.
-	recipe := newRecipe("First Recipe", "", "Test", "Test", "Test")
-
+	recipe := newRecipe("First Recipe", "", "Test", "Test", "Test", "Test Email")
 	insertRecipeFunc(s.db, recipe)
 	return writeJson(w, http.StatusOK, recipe)
 }

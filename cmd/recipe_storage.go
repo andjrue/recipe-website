@@ -7,21 +7,26 @@ import (
 )
 
 type Recipe struct {
-	ID           int64  `json: "id`
-	Title        string `json: "title"`
-	TimeToMake   string `json: "timeToMake"`
-	Description  string `json: "description"`
-	Ingredients  string `json: "ingredients"`
-	LinkToRecipe string `json: "linkToRecipe"`
+	ID           int64  `json:"id"`
+	Title        string `json:"title"`
+	TimeToMake   string `json:"timeToMake"`
+	Description  string `json:"description"`
+	Ingredients  string `json:"ingredients"`
+	LinkToRecipe string `json:"linkToRecipe"`
+	Email        string   `json:"email"` // We can send this from the front end.
+
+  // Might need to store the users email in state or something. When we post, we can include it. Should be simple enough.
+  // This works because the user will be signed in. For now, anyway. 
 }
 
-func newRecipe(title, timeToMake, description, ingredients, linkToRecipe string) *Recipe {
+func newRecipe(title, timeToMake, description, ingredients, linkToRecipe, email string) *Recipe {
 	return &Recipe{
 		Title:        title,
 		TimeToMake:   timeToMake,
 		Description:  description,
 		Ingredients:  ingredients,
 		LinkToRecipe: linkToRecipe,
+    Email: email,
 	}
 }
 
@@ -80,7 +85,7 @@ func createRecipeTableFunc(db *sql.DB) error {
 }
 
 func insertRecipeFunc(db *sql.DB, r *Recipe) error {
-	_, err := db.Exec(insertRecipe, r.Title, r.TimeToMake, r.Description, r.Ingredients, r.LinkToRecipe)
+	_, err := db.Exec(insertRecipe, r.Title, r.TimeToMake, r.Description, r.Ingredients, r.LinkToRecipe, r.Email)
 	return err
 }
 

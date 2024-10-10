@@ -4,7 +4,7 @@ import "database/sql"
 
 type User struct {
 	ID       int64  `json:"id"`
-	Email string `json:"email"` // Let's make this email. I don't want to reset someones password. 
+	Email    string `json:"email"`     // Let's make this email. I don't want to reset someones password.
 	Password string `json: "password"` // This will need to be hashed before they go into db https://medium.com/@cheickzida/golang-implementing-jwt-token-authentication-bba9bfd84d60
 }
 
@@ -14,10 +14,11 @@ type User struct {
 
 func newUser(em, pw string) *User {
 	return &User{
-		Email: em,
+		Email:    em,
 		Password: pw,
 	}
 }
+
 
 const createUserTable = `
 CREATE TABLE IF NOT EXISTS users(
